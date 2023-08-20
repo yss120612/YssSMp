@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Система автоматики Yss</title>
+    <meta name="description" content="Версия 0.1">
+    <meta name="author" content="Yss">
+    <link href="/css/bootstrap.min.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/js/highstock.js"></script>
+	<script type="text/javascript" src="/js/exporting.js"></script>
+	<script type="text/javascript" src="/js/export-data.js"></script>
+</head>
+<body>
+	<div class="container-fluid">
+	<div class="row">
+		<div class="col-md-12">
+			<a href="/" class="btn btn-info">Дом</a>
+		</div>
+		
+		<div class="col-md-offset-1 col-md-10">
+		<h3>Затирание</h3>
+		</div>
+		
+		<div class="panel panel-warning col-md-offset-1 col-md-10">
+		<div class="panel-heading">Термопаузы</div>
+		<div class="panel-body">		
+		
+		<div id="PAUSE1" class="panel panel-default col-md-2">
+		<div class="panel-heading">1я пауза</div>
+		<div class="panel-body">		
+			<div id="TTARGET1"></div>		
+			<div id="TIMETARGET1"></div>		
+		</div>
+	    </div>
+		
+		
+		<div id="PAUSE2" class="panel panel-default col-md-2">
+		<div class="panel-heading">2я пауза</div>
+		<div class="panel-body">		
+			<div id="TTARGET2"></div>		
+			<div id="TIMETARGET2"></div>		
+	    </div>
+		</div>
+		
+		<div id="PAUSE3" class="panel panel-default col-md-2">
+		<div class="panel-heading">3я пауза</div>
+		<div class="panel-body">		
+			<div id="TTARGET3"></div>		
+			<div id="TIMETARGET3"></div>		
+		</div>
+		</div>
+			
+		<div id="PAUSE4" class="panel panel-default col-md-2">
+		<div class="panel-heading">4я пауза</div>
+		<div class="panel-body">		
+			<div id="TTARGET4"></div>		
+			<div id="TIMETARGET4"></div>		
+		</div>
+		</div>
+		
+		<div id="PAUSE5" class="panel panel-default col-md-2">
+		<div class="panel-heading">Охлаждение</div>
+		<div class="panel-body">		
+			<div id="KRANTARGET5"></div>			
+		</div>
+		</div>
+		
+		
+		</div>
+		</div>
+		
+		<div class="panel panel-default  col-md-offset-1 col-md-10">
+		<div class="panel-heading">Текущие параметры</div>
+		<div class="panel-body">		
+		<div id="PHASE"></div>		
+		<div id="TIMELEFT"></div>		
+		<div id="TKUBE"></div>		
+		<div id="TTRIAK"></div>		
+		<div id="HPOWER"></div>		
+		<div id="STA"></div>		
+		</div>
+		</div>
+		
+		
+		<div class="panel panel-default col-md-offset-1 col-md-10">
+		<div class="panel-heading">Настройки</div>
+		<div class="panel-body">		
+		<div class="col-md-3">
+			<form action="/brewingset" id="setTPause">
+				<div class="form-group">
+				<label for="inputState">Выбор параметра</label>
+					<select id="inputState" class="form-control setdata">
+					<option value="1">Термопауза 1</option>
+					<option value="2">Термопауза 2</option>
+					<option value="3">Термопауза 3</option>
+					<option value="4">Термопауза 4</option>
+					<option value="5">Чиллер</option>
+				</select>
+				</div>
+				<div id="PAUSEDIV">
+				<div class="form-group">
+					<label for="TMPPAUSE">Температура </label>
+					<input type="input" class="form-control setdata" id="TMPPAUSE" aria-describedby="helpTmpPause">
+				</div>
+				<div class="form-group">
+					<label for="TIMEPAUSE">Время (мин.) </label>
+					<input type="input" class="form-control setdata" id="TIMEPAUSE" aria-describedby="helpTimePause">
+				</div>
+				</div>
+				<div id="CHILLERDIV">
+					<label class="form-check-label">
+						<input class="form-check-input setdata" type="checkbox" id="CHILLER"> Чиллер
+					</label>
+				</div>
+				
+				<input type="hidden" id="lock">
+				<button type="submit" class="btn btn-primary">Установить</button>
+			</form>
+		</div>
+		</div>
+		</div>
+		
+		<div class="panel panel-success col-md-offset-1 col-md-10">		
+		<div class="panel-heading">Графики</div>
+		<div class="panel-body">		
+		<div class="col-md-offset-1 col-md-10">
+			<div id="CHART"></div>		
+		</div>
+		</div>
+		</div>
+	</div>
+	</div>
+ </body>
+ </html>
+ <script type="text/javascript">
+	$(document).ready(function(){
+	process();
+	
+	
+	var target=0;
+	var chart1 = new Highcharts.Chart({
+	title: {
+		text: 'Brewing'
+	},
+	subtitle: {
+		text: 'История изменения температуры в кубе и мощности тэна.'
+	},
+	yAxis:[{
+	
+	title: {
+        text: 'Температура'
+		},
+		 plotLines: [{
+                value: 60,
+                color: 'green',
+				id: 'tmp',
+                dashStyle: 'shortdash',
+                width: 1,
+                label: {
+                    text: 'Заданная температура'
+                }
+            }],
+		 labels: {
+			formatter: function() {
+            return this.value + '°C'
+			}
+		 }
+		},{
+		title: {
+        text: 'Мощность'
+		},
+        labels: {
+			formatter: function() {
+            return this.value + '%'
+			}
+		 },
+		 opposite: true
+		}],
+        xAxis: {
+            type: 'datetime',
+			
+			 
+        },	
+		
+		time:{
+		useUTC:false,
+		},
+		
+        chart: {
+            renderTo: 'CHART',
+			type: 'spline', 
+			 events: {
+            load: function () {
+			
+			 var series0 = this.series[0];
+			 var series1 = this.series[1];
+			 var ax = this.yAxis[0];
+			 
+			setInterval(function(){
+			$.getJSON("/brewingdata", function(lst) {
+			var shift = series0.data.length > 99;
+			var y0= parseFloat(lst['kube_data']);
+			var y1= parseFloat(lst['heater_data']);
+			var t=parseFloat(lst['ttarget_data']);
+			var x=(new Date()).getTime();
+			if (target!=t)
+			{
+			target=t;
+			ax.removePlotLine('tmp');
+			ax.addPlotLine({
+				value: parseFloat(lst['ttarget_data']),
+                color: 'green',
+				id: 'tmp',
+                dashStyle: 'shortdash',
+                width: 1,
+                label: {
+                    text: 'Заданная температура'
+                }
+			});
+			}
+			series0.addPoint([x,y0],true,shift); 
+			series1.addPoint([x,y1],true,shift); 
+			});
+			}, 30000);
+            }
+        }
+        },
+			
+		
+        series: [{
+			name:'Температура',
+            data: [20],
+			yAxis: 0,
+            pointStart: (new Date()).getTime()-10000,
+           // pointInterval: 10 * 1000
+        },{
+			name:'Мощность тэна',
+            data: [40],
+			yAxis: 1,
+			color: '#FF0000',
+            pointStart: (new Date()).getTime()-10000,
+		}]
+    });
+	
+	$('.setdata').focus(function() {
+		$("#lock").addClass("focus");
+	});
+	$('.setdata').blur(function() {
+		$("#lock").removeClass("focus");
+	});
+		  
+	$('#setTPause').submit(function(){  
+			if ($("#inputState").val()=="5"){	
+			$.ajax({  
+                    type: "POST",  
+                    url: "/brewingset",  
+                    data: "CHILLER="+($("#CHILLER").is(":checked")?"1":"0")+"&PART="+$("#inputState").val(),  
+                    success: function(html){  
+                    }  
+			}); 
+			}
+			else
+			{
+                $.ajax({  
+                    type: "POST",  
+                    url: "/brewingset",  
+                    data: "TMP="+$("#TMPPAUSE").val()+"&TIME="+$("#TIMEPAUSE").val()+"&PART="+$("#inputState").val(),  
+                    success: function(html){  
+                    }  
+				});  
+				}
+                return false;  
+            });  
+	
+	$("#inputState").change(function(){
+		if ($("#inputState").val()=="5"){
+		$.getJSON(
+		"/brewingdata",
+		function(data){
+		$("#PAUSEDIV").hide();
+		$("#CHILLERDIV").show();
+		$("#CHILLER").prop('checked',data['chiller_data']!=0);
+		});
+		}
+		else
+		{
+		$.getJSON(
+		"/brewingdata",
+		function(data){
+		$("#PAUSEDIV").show();
+		$("#CHILLERDIV").hide();
+		$("#TMPPAUSE").val(data['ttarget'+$("#inputState").val()+'_data']);
+		$("#TIMEPAUSE").val(data['timetarget'+$("#inputState").val()+'_data']);
+		});
+		}
+		
+	});
+	
+	$("#inputState").change();
+	
+	});
+	
+			
+	function process(){
+		$.getJSON(
+		"/brewingdata",
+		function(data){
+		$('#TTARGET1').html('Температура <b>'+data['ttarget1_data']+'&deg;C</b>');
+		$('#TIMETARGET1').html('Время <b>'+data['timetarget1_data']+' мин.</b>');
+		$('#TTARGET2').html('Температура <b>'+data['ttarget2_data']+'&deg;C</b>');
+		$('#TIMETARGET2').html('Время <b>'+data['timetarget2_data']+' мин.</b>');
+		$('#TTARGET3').html('Температура <b>'+data['ttarget3_data']+'&deg;C</b>');
+		$('#TIMETARGET3').html('Время <b>'+data['timetarget3_data']+' мин.</b>');
+		$('#TTARGET4').html('Температура <b>'+data['ttarget4_data']+'&deg;C</b>');
+		$('#TIMETARGET4').html('Время <b>'+data['timetarget4_data']+' мин.</b>');
+		$('#KRANTARGET5').html('Кран открыт на <b>'+data['kran_data']+' %</b>');
+		
+		var pd=data['phase_data'];
+		
+		for (var i = 1; i <= 5; i++) {
+			if (i==pd){
+			if ($("#PAUSE"+i).hasClass("panel-default")) $("#PAUSE"+i).removeClass("panel-default");
+			if (!$("#PAUSE"+i).hasClass("panel-danger")) $("#PAUSE"+i).addClass("panel-danger");
+			}else{
+			if (!$("#PAUSE"+i).hasClass("panel-default")) $("#PAUSE"+i).addClass("panel-default");
+			if ($("#PAUSE"+i).hasClass("panel-danger")) $("#PAUSE"+i).removeClass("panel-danger");
+			}
+		}
+			
+		
+		if (!$('#lock').hasClass('focus')){
+			if ($("#inputState").val()=="1"){
+				$('#TMPPAUSE').val(data['ttarget1_data']);
+				$('#TIMEPAUSE').val(data['timetarget1_data']);
+			} else if ($("#inputState").val()=="2"){
+				$('#TMPPAUSE').val(data['ttarget2_data']);
+				$('#TIMEPAUSE').val(data['timetarget2_data']);
+			} else if ($("#inputState").val()=="3"){
+				$('#TMPPAUSE').val(data['ttarget3_data']);
+				$('#TIMEPAUSE').val(data['timetarget3_data']);
+			} else if ($("#inputState").val()=="4"){
+				$('#TMPPAUSE').val(data['ttarget4_data']);
+				$('#TIMEPAUSE').val(data['timetarget4_data']);
+			}
+			$('#CHILLER').prop('checked',data['chiller_data']!=0);
+		}
+				
+		$('#TKUBE').html('Температура в кубе <b>'+data['kube_data']+'&deg;C</b>');
+		$('#PHASE').html('Фаза затирания <b>'+pd+'</b>');
+		$('#TTRIAK').html('Температура радиатора нагревателя <b>'+data['cooler_data']+'&deg;C</b>');
+		$('#HPOWER').html('Мощность нагревателя <b>'+data['heater_data']+'%</b>');
+		$('#TIMELEFT').html('Осталось <b>'+data['time_data']+'</b>');
+		$('#STA').html('Состояние <b>'+data['state_data']+'</b>');
+		});
+		setTimeout('process()',3000);
+	};
+		</script>
+	</body>
+</html>

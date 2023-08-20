@@ -1,7 +1,7 @@
 // Main.h
 
-#ifndef _MAIN_h
-#define _MAIN_h
+#ifndef _FIRST_h
+#define _FIRST_h
 
 #if defined(ARDUINO) && ARDUINO >= 100
 	#include "arduino.h"
@@ -12,9 +12,9 @@
 #include "Mode.h"
 #include "Workmodes.h"
 
-class Main: public Mode {
+class First: public Mode {
 public:
-	Main(Aggregates * a,Hardware * h);
+	First(Aggregates * a,Hardware * h);
 
 	void draw(long m);
 	void showState();

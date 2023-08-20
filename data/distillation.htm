@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Система автоматики Yss</title>
+    <meta name="description" content="Версия 0.1">
+    <meta name="author" content="Yss">
+    <link href="/css/bootstrap.min.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/js/highstock.js"></script>
+	<script type="text/javascript" src="/js/exporting.js"></script>
+	<script type="text/javascript" src="/js/export-data.js"></script>
+</head>
+<body>
+	<div class="container-fluid">
+	<div class="row">
+		<div class="col-md-12">
+			<a href="/" class="btn btn-info">Дом</a>
+		</div>
+		<div class="col-md-offset-1 col-md-10">
+			<h3>Дистилляция</h3>
+		</div>
+		
+		<div class="panel panel-default col-md-offset-1 col-md-10">
+		<div class="panel-heading">Текущие параметры</div>
+		<div class="panel-body">		
+		<div class="col-md-offset-1 col-md-10">
+			<div id="TTSA"></div>		
+		</div>
+		<div class="col-md-offset-1 col-md-10">
+			<div id="TDEF"></div>		
+		</div>
+		<div class="col-md-offset-1 col-md-10">
+			<div id="TKUBE"></div>		
+		</div>
+		<div class="col-md-offset-1 col-md-10">
+			<div id="TTRIAK"></div>		
+		</div>
+		<div class="col-md-offset-1 col-md-10">
+			<div id="HPOWER"></div>		
+		</div>
+		<div class="col-md-offset-1 col-md-10">
+			<div id="KSTATE"></div>		
+		</div>
+		<div class="col-md-offset-1 col-md-10">
+			<div id="UROVEN"></div>		
+		</div>
+		<div class="col-md-offset-1 col-md-10">
+			<div id="FLOOD"></div>		
+		</div>
+		<div class="col-md-offset-1 col-md-10">
+			<div id="STA"></div>		
+		</div>
+		</div>
+		</div>
+		<div class="panel panel-default col-md-offset-1 col-md-10">
+		<div class="panel-heading">Настройки</div>
+		<div class="panel-body">		
+		<form action="/distillset" id="setTStop">
+				<div class="form-group">
+					<label for="TMPSTOP">Остановить при Т в кубе </label>
+					<input type="input" class="form-control setdata" id="TMPSTOP" aria-describedby="helpTmpStop">
+				</div>
+				<input type="hidden" id="lock">
+				<button type="submit" class="btn btn-primary">Установить</button>
+			</form>
+		</div>
+		</div>
+		
+		<div class="panel panel-success col-md-offset-1 col-md-10">
+		<div class="panel-heading">График</div>
+		<div class="panel-body">		
+		<div class="col-md-offset-1 col-md-10">
+			<div id="CHART"></div>		
+		</div>
+		</div>
+		</div>
+	</div>
+	</div>
+ </body>
+ <script type="text/javascript">
+	$(document).ready(function(){
+	process();
+	var target=0;
+	var chart1 = new Highcharts.Chart({
+	title: {
+		text: 'Дистилляция'
+	},
+	subtitle: {
+		text: 'температуры в узлах и мощность тэна.'
+	},
+	yAxis:[{
+	
+	title: {
+        text: 'Температура'
+		},
+		 plotLines: [{
+                value: 60,
+                color: 'green',
+				id: 'tmp',
+                dashStyle: 'shortdash',
+                width: 1,
+                label: {
+                    text:  'Окончание процесса'
+                }
+            }],
+		 labels: {
+			formatter: function() {
+            return this.value + '°C'
+			}
+		 }
+		},{
+		title: {
+        text: 'Мощность'
+		},
+        labels: {
+			formatter: function() {
+            return this.value + '%'
+			}
+		 },
+		 opposite: true
+		}],
+        xAxis: {
+            type: 'datetime',
+			
+			 
+        },	
+		
+		time:{
+		useUTC:false,
+		},
+		
+        chart: {
+            renderTo: 'CHART',
+			type: 'spline', 
+			 events: {
+            load: function () {
+			
+			 var series0 = this.series[0];
+			 var series1 = this.series[1];
+			 var series2 = this.series[2];
+			 var ax = this.yAxis[0];
+			 
+			setInterval(function(){
+			$.getJSON("/distilldata", function(lst) {
+			var shift = series0.data.length > 99;
+			var y0= parseFloat(lst['kube_data']);
+			var y1= parseFloat(lst['heater_data']);
+			var y2= parseFloat(lst['tsa_data']);
+			var t=parseFloat(lst['tstop_data']);
+			var x=(new Date()).getTime();
+			if (target!=t)
+			{
+			target=t;
+			ax.removePlotLine('tmp');
+			ax.addPlotLine({
+				value: target,
+               color: 'green',
+				id: 'tmp',
+               dashStyle: 'shortdash',
+                width: 1,
+                label: {
+                    text: 'Окончание процесса'
+                }
+			});
+			}
+			
+			//y0= randomInteger(0, 99);
+			//y1= randomInteger(0, 99);
+			//y2= randomInteger(0, 99);
+			//y3= randomInteger(0, 99);
+			
+			series0.addPoint([x,y0],true,shift); 
+			series1.addPoint([x,y1],true,shift); 
+			series2.addPoint([x,y2],true,shift); 
+			
+			});
+			}, 30000);
+            }
+        }
+        },
+	
+
+		
+		
+        series: [{
+			name:'Т куба',
+            data: [20],
+			yAxis: 0,
+            pointStart: (new Date()).getTime(),
+        },{
+			name:'Мощность тэна',
+            data: [40],
+			yAxis: 1,
+			color: '#FF0000',
+            pointStart: (new Date()).getTime(),
+		}, {
+			name:'Т ТСА',
+            data: [20],
+			yAxis: 0,
+            pointStart: (new Date()).getTime(),
+        }
+		]
+    });
+	$('.setdata').focus(function() {
+		$("#lock").addClass("focus");
+	});
+	$('.setdata').blur(function() {
+		$("#lock").removeClass("focus");
+	});
+	$('#setTStop').submit(function(){  
+			
+			$.ajax({  
+                    type: "POST",  
+                    url: "/distillset",  
+                    data: "TSTOP="+$("#TMPSTOP").val(),  
+                    success: function(html){  
+                    }  
+			}); 
+                return false;  
+            });  
+			
+	
+	});
+	
+	function process(){
+		$.getJSON(
+		"/distilldata",
+		function(data){
+		$('#TTSA').html('Температура TSA <b>'+data['tsa_data']+'&deg;C</b>');
+		$('#TDEF').html('Температура в дефлегматоре <b>'+data['def_data']+'&deg;C</b>');
+		$('#TKUBE').html('Температура в кубе <b>'+data['kube_data']+'&deg;C</b>');
+		$('#TTRIAK').html('Температура радиатора нагревателя <b>'+data['cooler_data']+'&deg;C</b>');
+		$('#HPOWER').html('Мощность нагревателя <b>'+data['heater_data']+'%</b>');
+		$('#KSTATE').html('Кран охладителя открыт на <b>'+data['kran_data']+'%</b>');
+		$('#UROVEN').html('Датчик уровня <b>'+data['wsu_data']+'%</b>');
+		$('#FLOOD').html('Датчик протечки <b>'+data['wsf_data']+'%</b>');
+		$('#STA').html('Состояние <b>'+data['state_data']+'</b>');
+		if (!$('#lock').hasClass('focus')){
+			$('#TMPSTOP').val(data['tstop_data']);
+			}
+				
+		});
+		setTimeout('process()',3000);
+	}
+	</script>
+</html>
