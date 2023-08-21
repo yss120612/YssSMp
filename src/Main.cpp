@@ -1,4 +1,4 @@
-#include <Arduino.h>
+
 // #include "Brewing.h"
 // #include "Manual.h"
 // #include "Pump.h"
@@ -13,7 +13,7 @@
 //#include "Config.h"
 
 // #include "Mode.h"
-// #include "Main.h"
+// #include "First.h"
 // //#include "Suvid.h"
 // #include "Distillation.h"
 // #include "Workmodes.h"
@@ -26,7 +26,7 @@ long mls;
 // Hardware hard;
 // Aggregates agg(&hard);
 
-// Mode * _main = new Main(&agg, &hard);
+// Mode * _main = new First(&agg, &hard);
 // //Mode * suvid = new Suvid(&agg, &hard);
 // Mode * distill = new Distillation(&agg, &hard);
 // Mode * rectify = new Rectify(&agg, &hard);
@@ -35,7 +35,7 @@ long mls;
 
 void setup() {
 #ifdef _SERIAL
-	Serial.begin(74880);
+	Serial.begin(115200);
 	// logg.logging("_SERIAL is defined");
 #else
 	// logg.logging("_SERIAL is NOT defined");
